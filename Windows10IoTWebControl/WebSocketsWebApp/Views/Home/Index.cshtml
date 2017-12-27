@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<p>&nbsp;</p>
+<div class="row">
+    <input type="text" style="max-width:unset;width:100%;max-width:100%" id="MessageField" placeholder="type message and press enter" /><br />
+    <div class="col-md-12" id="msgs">
+
+    </div>
+</div>
+@section Scripts {
+    <script>
+    $(function () {
+        var protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        var wsUri = protocol + "//" + window.location.host;
+        var socket = new WebSocket(wsUri);
+        socket.onopen = e => {
+            console.log("socket opened", e);
+        };
+
+        socket.onclose = function (e) {
+            console.log("socket closed", e);
+        };
+
+        socket.onmessage = function (e) {
+            console.log(e);
+            $('#msgs').append(e.data + '<br />');
+        };
+
+        socket.onerror = function (e) {
+            console.error(e.data);
+        };
+
+        $('#MessageField').keypress(function (e) {
+            if (e.which != 13) {
+                return;
+            }
+
+            e.preventDefault();
+
+            socket.send($('#MessageField').val());
+            $('#MessageField').val('');
+        });
+    });
+    </script>
+}
