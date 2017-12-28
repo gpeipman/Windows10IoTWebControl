@@ -52,9 +52,8 @@ namespace WebSocketsBackgroundTask
                         break;
                     }
 
-                    var message = "Report " + (rnd.NextDouble() * 100);
-                    var segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
-                    await client.SendAsync(segment, WebSocketMessageType.Text, true, ct);
+                    var message = "Report " + Math.Round(rnd.NextDouble() * 100, 2);
+                    await SendStringAsync(client, message);
                     await Task.Delay(10000);
                 }
 
@@ -79,6 +78,18 @@ namespace WebSocketsBackgroundTask
 
                     var fromSocket = await ReceiveStringAsync(client, ct);
                     Debug.WriteLine(fromSocket);
+
+                    if (fromSocket != null)
+                    {
+                        if (fromSocket.Trim().ToLower() == "opsys")
+                        {
+                            await SendStringAsync(client, "Operating system: " + Environment.OSVersion, ct);
+                        }
+                        if (fromSocket.Trim().ToLower() == "machine name")
+                        {
+                            await SendStringAsync(client, "Machine name: " + Environment.MachineName, ct);
+                        }
+                    }
                 }
 
                 await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
@@ -111,6 +122,12 @@ namespace WebSocketsBackgroundTask
                     return await reader.ReadToEndAsync();
                 }
             }
+        }
+
+        private static async Task SendStringAsync(ClientWebSocket client, string message, CancellationToken ct = default(CancellationToken))
+        {
+            var segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
+            await client.SendAsync(segment, WebSocketMessageType.Text, true, ct);
         }
     }
 }
